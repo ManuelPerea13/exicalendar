@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <script type="text/javascript" src="../exontrol.common.min.js"></script>
+    <script type="text/javascript" src="../exontrol.patch.min.js"></script>
+    <script type="text/javascript" src="exontrol.icalendar.min.js"></script>
+  </head>
+  <body>
+    </canvas>
+    <script>
+      // displays the last day of the month, for the first 6 months of the current year
+      (exontrol.ICalendar.IRecur.Parse("FREQ=MONTHLY;BYMONTHDAY=28,29,30,31;BYSETPOS=-1;COUNT=6").all(
+      {
+        start: Date.Today().Reset(0 /*exYear*/),  // {Date} indicates the Jan 1st, of the current year, where the recurrence begins
+        //until: Date.Today(),                    // {Date} specifies the end of the recurrence
+        //count: 2,                               // {number} overrides the COUNT rule
+        filter: function(dateTimeN)               // {callback} Specifies a function of callback(dateTimeN) {number} type that filters the date-time within the result. The dateTimeN parameter indicates the result of getTime() method of a Date object (An integer value representing the number of milliseconds since January 1, 1970, 00:00:00 UTC). For instance: function(dateTime) { return dateTime - dateTime % exontrol.msday; } excludes the time from the each date-time of the result.
+        {
+          return dateTimeN - dateTimeN % exontrol.msday;  // excludes the time-portion from the dateTime value
+        }
+      }) || []).forEach(function(dateTimeN)
+      {
+        console.log(new Date(dateTimeN).toDateString())
+      })
+    </script>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <script type="text/javascript" src="../exontrol.common.min.js"></script>
+    <script type="text/javascript" src="../exontrol.patch.min.js"></script>
+    <script type="text/javascript" src="exontrol.icalendar.min.js"></script>
+  </head>
+  <body>
+    </canvas>
+    <script>
+      // displays the last day of the month, for 6 months
+      var oRecur = exontrol.ICalendar.IRecur.Parse("FREQ=MONTHLY;BYMONTHDAY=28,29,30,31;BYSETPOS=-1;COUNT=6");
+      console.log(oRecur.error() || oRecur.all().reduce(function(prev, dateTimeN)
+      {
+          return prev + new Date(dateTimeN).toUTCString() + "\n";
+      }, ""));
+    </script>
+  </body>
+</html>

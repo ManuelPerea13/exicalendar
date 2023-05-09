@@ -1,0 +1,14 @@
+.str
+{
+    color:#ce9178;
+}
+
+.kwd, .typ
+{
+    color: #569cd6;
+}
+
+.com
+{
+    color: #6a9955;
+}

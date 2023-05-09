@@ -1,0 +1,814 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; CHARSET=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="exontrol.icalendar" />
+    <title>exontrol.icalendar - javascript icalendar</title>
+    <link rel="stylesheet" type="text/css" href="../exontrol.jssample.css">
+    <script type="text/javascript" src="../exontrol.jscode.min.js"></script>
+    <script type="text/javascript" src="../exontrol.common.min.js"></script>
+    <script type="text/javascript" src="../exontrol.patch.min.js"></script>
+    <script type="text/javascript" src="../exontrol.help.def.js"></script>
+    <script type="text/javascript" src="../excalendar/exontrol.calendar.min.js"></script>
+    <script type="text/javascript" src="../excalendar/exontrol.calendar.def.js"></script>
+    <script type="text/javascript" src="../excalendar/exontrol.calendar.shapes.js"></script>
+    <script type="text/javascript" src="exontrol.icalendar.min.js"></script>
+    <style>
+        .jssamples .code
+        {
+            position: inherit;
+        }
+
+        .jssamples .content
+        {
+            display: inline-flex;
+        }
+        
+        .jssamples .code pre::before
+        {
+            position: fixed;
+        }
+        
+        #calendar .rulebox
+        {
+            position: absolute;
+            margin-left: 4px;
+            margin-top: 4px;            
+            width: calc(100% - 136px);
+            top: 8px;
+            background: white;
+        }
+
+        #calendar .line
+        {
+            display: flex;
+            margin-bottom: 4px;            
+        }
+
+        #calendar .line.sep
+        {
+            height: 1px;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            background: #F0F0F0; /*Edge/IE*/;
+            background: var(--main-bd-color);
+        }
+
+        #calendar #expression, #calendar #interval, #calendar #count
+        {
+            height: 1em;
+            line-height: 1em;
+        }
+
+        #calendar .every
+        {
+            padding-left: 4px;
+        }
+
+        #calendar #interval, #calendar #count
+        {
+            width: 2.5em;
+        }
+
+        #calendar #expression
+        {
+            resize: none;
+            overflow-y: hidden;
+            min-width: 25%;
+            width: 100%;
+            vertical-align: middle;        
+        }
+
+        #calendar #expression, #calendar #error
+        {
+            margin-left: 4px;
+        }
+
+        #calendar .head
+        {
+            width: 64px;
+            display: inline-block;
+        }
+
+        .error, #calendar #error
+        {
+            color: red
+        }
+
+        #all #result
+        {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        #all .code
+        {
+            overflow: hidden;
+            margin: 0;
+            border-top: none;
+            user-select: text;
+        }
+
+        #calendar input, #calendar textarea, #calendar select, #all input, #all select, #all textarea
+        {
+            border: 1px solid black;
+            border-radius: 4px;
+            padding: 4px;
+        }
+
+        #calendar input[type='checkbox']
+        {
+            outline: 0;
+            user-select: none;
+            display: inline-block;
+            position: absolute;
+            opacity: 0;
+        }
+
+        #calendar input[type='checkbox'] + label
+        {
+            display: inline-block;
+            width: 2em;
+            text-align: center;
+            padding-left: 4px;
+            padding-right: 4px;
+            padding-bottom: 2px;
+            cursor: pointer;
+        }
+
+        #calendar input[type='checkbox']:checked + label, #calendar .active
+        {
+            background-color: black;
+            color: white;
+        }
+
+        #calendar input[type=date]:in-range::-webkit-datetime-edit
+        {
+            color: transparent;
+        }
+
+        #calendar input[type=date]:not(.active):focus::-webkit-datetime-edit
+        {
+            color: black !important;
+        }
+
+        #calendar input[type=date].active::-webkit-calendar-picker-indicator
+        {
+            filter: invert(1);
+        }
+
+        #calendar input, #calendar textarea, #calendar select, #all input, #all select, #all textarea, #calendar input[type='checkbox'] + label
+        {
+            border: 1px solid #D8D8D8;
+            border-radius: 4px;
+        }
+
+        @media only screen and (max-width: 580px)
+        {
+            #calendar .rulebox
+            {
+                margin-top: 24px;
+                width: calc(100% - 16px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <p>
+        The eXICalendar/JS library implements the ICalendar data format, according with Internet Calendaring and Scheduling Core Object Specification, RFC 5545, especially the RRULE property, which defines a rule or repeating pattern for recurring events, to-dos, journal entries, or time zone definitions. The recurrence rule, is used in computing the recurrence set. The recurrence set is the complete set of recurrence instances for a calendar component. The recurrence set is generated by considering the initial "DTSTART" property.
+        The eXICalendar/JS is a HTML standalone-component, written in JavaScript, that uses no third-party libraries.
+    </p>
+    <div class="jssamples">
+        <div class="header">
+            <div class="sample">Calendar</div>
+            <div class="sample">All</div>
+        </div>
+        <div class="content">
+            <div class="sample" id="calendar" >
+                <canvas tabindex="0" id="canvasCalendar" width="588" height="412">
+                    Your browser does not support the HTML5 canvas tag.
+                </canvas>
+                <div id="rulebox" class="rulebox">
+                    <div class="line">
+                        <div class="freq">
+                            <label class="head" for="freq">Repetir</label>
+                            <select id="freq" name="FREQ" title="The FREQ rule part identifies the type of recurrence rule. This rule part MUST be specified in the recurrence rule.">
+                                <option></option>
+                                <option>Anual</option>
+                                <option>Mensual</option>
+                                <option>Semanal</option>
+                                <option>Diario</option>
+                            </select>
+                        </div>
+                        <div class="interval">
+                            <label class="every" for="interval">cada</label>
+                            <input id="interval" name="INTERVAL" type="number" min="1" title="The INTERVAL rule part contains a positive integer representing at which intervals the recurrence rule repeats. The default value is '1', meaning every second for a SECONDLY rule, every minute for a MINUTELY rule, every hour for an HOURLY rule, every day for a DAILY rule, every week for a WEEKLY rule, every month for a MONTHLY rule, and every year for a YEARLY rule.  For example, within a DAILY rule, a value of '8' means every eight days.">
+                            <label id="rate"></label>
+                            <span class="start">
+                                <label for="dtstart">, desde</label>
+                                <input id="dtstart" name="DTSTART" type="date" title="The DTSTART rule specifies the date the recurrence starts from, in YYYYMMDD[THHNNSS[Z]] format.">
+                            </span>
+                        </div>
+                    </div>
+                    <div class="line">
+                        <div class="month">
+                            <label class="head">on</label>
+                            <span class="months" title="The BYMONTH rule part specifies a COMMA-separated list of months of the year.  Valid values are 1 to 12.">
+                                <input id="jan" name="BYMONTH" value="1" type="checkbox">
+                                <label for="jan">Ene</label>
+                                <input id="feb" name="BYMONTH" value="2" type="checkbox">
+                                <label for="feb">Feb</label>
+                                <input id="mar" name="BYMONTH" value="3" type="checkbox">
+                                <label for="mar">Mar</label>
+                                <input id="apr" name="BYMONTH" value="4" type="checkbox">
+                                <label for="apr">Apb</label>
+                                <input id="may" name="BYMONTH" value="5" type="checkbox">
+                                <label for="may">May</label>
+                                <input id="jun" name="BYMONTH" value="6" type="checkbox">
+                                <label for="jun">Jun</label>
+                                <input id="jul" name="BYMONTH" value="7" type="checkbox">
+                                <label for="jul">Jul</label>
+                                <input id="aug" name="BYMONTH" value="8" type="checkbox">
+                                <label for="aug">Ago</label>
+                                <input id="sep" name="BYMONTH" value="9" type="checkbox">
+                                <label for="sep">Sep</label>
+                                <input id="oct" name="BYMONTH" value="10" type="checkbox">
+                                <label for="oct">Oct</label>
+                                <input id="nov" name="BYMONTH" value="11" type="checkbox">
+                                <label for="nov">Nov</label>
+                                <input id="dec" name="BYMONTH" value="12" type="checkbox">
+                                <label for="dec">Dic</label>
+                              </span>
+                            <label>,</label>
+                            <select id="bymonthday" name="BYMONTHDAY" title="The BYMONTHDAY rule part specifies a COMMA-separated list of days of the month. Valid values are 1 to 31 or -31 to -1. For example, -10 represents the tenth to the last day of the month. The BYMONTHDAY rule part MUST NOT be specified when the FREQ rule part is set to WEEKLY.">
+                                <option></option>
+                            </select>
+                            <label>, por semana</label>
+                            <select id="byweekno" name="BYWEEKNO" title="The BYWEEKNO rule part specifies a COMMA-separated list of ordinals specifying weeks of the year. Valid values are 1 to 53 or -53 to -1.">
+                                <option></option>
+                            </select>
+                            <label>that starts on</label>
+                            <select id="wkst" name="WKST" title="The WKST rule part specifies the day on which the workweek starts. Valid values are MO, TU, WE, TH, FR, SA, and SU.  This is significant when a WEEKLY RRULE has an interval greater than 1, and a BYDAY rule part is specified. The default value is MO.">
+                                <option></option>
+                                <option value="Mo">Lun</option>
+                                <option value="Tu">Mar</option>
+                                <option value="We">Mie</option>
+                                <option value="Th">Jue</option>
+                                <option value="Fr">Vie</option>
+                                <option value="Sa">Sab</option>
+                                <option value="Su">Dom</option>
+                            </select>
+                            <label>, by year day</label>
+                            <select id="byyearday" name="BYYEARDAY" title="The BYYEARDAY rule part specifies a COMMA-separated list of days of the year. Valid values are 1 to 366 or -366 to -1. For example, -1 represents the last day of the year (December 31st) and -306 represents the 306th to the last day of the year (March 1st).  The BYYEARDAY rule part MUST NOT be specified when the FREQ rule part is set to DAILY, WEEKLY, or MONTHLY">
+                                <option></option>
+                            </select>                                                        
+                        </div>
+                    </div>
+                    <div class="line">
+                        <div class="bypos">
+                            <label class="head" for="bysetpos">on the</label>
+                            <select id="bysetpos" name="BYSETPOS" title="The BYSETPOS rule part specifies a COMMA-separated list of values that corresponds to the nth occurrence within the set of recurrence instances specified by the rule.  BYSETPOS operates on a set of recurrence instances in one interval of the recurrence rule. For example, in a WEEKLY rule, the interval would be one week A set of recurrence instances starts at the beginning of the interval defined by the FREQ rule part.  Valid values are 1 to 366 or -366 to -1.  It MUST only be used in conjunction with another BYxxx rule part.  For example 'the last work day of the month' could be represented as: FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1 Each BYSETPOS value can include a positive (+n) or negative (-n) integer.  If present, this indicates the nth occurrence of the specific occurrence within the set of occurrences specified by the rule">
+                                <option></option>
+                                <option value="1">First</option>
+                                <option value="2">Second</option>
+                                <option value="3">Third</option>
+                                <option value="-2">Next to last</option>
+                                <option value="-1">Last</option>
+                            </select>
+                            <span class="weekdays" title="The BYDAY rule part specifies a COMMA-separated list of days of the week; SU indicates Sunday; MO indicates Monday; TU indicates Tuesday; WE indicates Wednesday; TH indicates Thursday; FR indicates Friday; and SA indicates Saturday.">
+                                <input id="mon" name="BYDAY" value="Mo" type="checkbox">
+                                <label for="mon">Lun</label>
+                                <input id="tue" name="BYDAY" value="Tu" type="checkbox">
+                                <label for="tue">Mar</label>
+                                <input id="wed" name="BYDAY" value="We" type="checkbox">
+                                <label for="wed">Mie</label>
+                                <input id="thu" name="BYDAY" value="Th" type="checkbox">
+                                <label for="thu">Jue</label>
+                                <input id="fri" name="BYDAY" value="Fr" type="checkbox">
+                                <label for="fri">Vie</label>
+                                <input id="sat" name="BYDAY" value="Sa" type="checkbox">
+                                <label for="sat">Sab</label>
+                                <input id="sun" name="BYDAY" value="Su" type="checkbox">
+                                <label for="sun">Dom</label>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="line">
+                        <div class="end">
+                            <label class="head">finaliza</label>
+                            <label for="count">despues</label>
+                            <input id="count" name="COUNT" type="number" min="0" title="The COUNT rule part defines the number of occurrences at which to range-bound the recurrence. The DTSTART property value always counts as the first occurrence.">
+                            <label for="count">time(s)</label>
+                            <label for="until">, hasta</label>
+                            <input id="until" name="UNTIL" type="date" title="The UNTIL rule part defines a DATE or DATE-TIME value that bounds the recurrence rule in an inclusive manner.  If the value specified by UNTIL is synchronized with the specified recurrence, this DATE or DATE-TIME becomes the last instance of the recurrence.  The value of the UNTIL rule part MUST have the same value type as the DTSTART property.">
+                        </div>
+                    </div>
+                    <div class="line sep"></div>
+                    <div class="line">
+                        <label class="head" for="expression">RRULE</label>
+                        <textarea id="expression" oninput="onExpr(this.value);onChangeExpr();" spellcheck="false" title="Defines a rule or repeating pattern for recurring events, to-dos, journal entries, or time zone definitions.">FREQ=Monthly;BYDAY=Mo,Tu,We,Th,Fr;BYSETPOS=-1</textarea>
+                        <span id="error"></span>
+                    </div>
+                </div>
+                <script>
+                    var oCalendar = new exontrol.Calendar(canvasCalendar,
+                    {
+                        dayNonMonth: false
+                    });
+
+                    /**
+                     * @description The gLyO/getLayoutOrigin() method returns the offset to display the layout in the center of the client area.
+                     * @param {object} [oLayout] Indicates an object of Layout type that holds visible elements to display the control's content
+                     * @returns {object} Returns an object of {x,y} type that specifies the layout's origin.
+                     * @private
+                    */
+                    oCalendar.gLyO = (function(_super)
+                    {
+                        return function()
+                        {
+                            var oLayoutOrigin = _super.apply(this, arguments);
+                            oLayoutOrigin.y += exontrol.Ert(rulebox)[3 /*exontrol.h*/]/2; // shows the calendar vertically centered (pass the rulebox)
+                            return oLayoutOrigin;
+                        }
+                    })(oCalendar.gLyO)
+
+                    /**
+                     * @description The setFirstWeekDay() method sets the calendar's first day of the week
+                     * @param {exontrol.WeekDayEnum} value Indicates the first day of the week
+                    */
+                    function setFirstWeekDay(value)
+                    {
+                        exontrol.Loc.Get("xxx").firstWeekDay = value;
+                        oCalendar.Locale = "xxx";
+                    }
+
+                    /**
+                     * @description The setFirstVisibleDate() method sets the calendar's first visible date
+                     * @param {any} value Specifies the year to view
+                    */
+                    function setFirstVisibleDate(value)
+                    {
+                        oCalendar.Date = Date.Create(new Date(value).GetYear(), 1, 1);
+                    }
+
+                    /**
+                     * @description The onExpr() method updates the calendar's recurrences once the recurrence-expressio is changed
+                     * @param {string} expression Specifies the recurrence-expression
+                    */
+                    function onExpr(expression)
+                    {
+                        // updates the calendar at once
+                        oCalendar.Update(function()
+                        {
+                            this._rr = null; // resets the current-recurrences
+                            var oRR = this.getRecurrences(); // re-gets the recurrences
+                            if ( oRR.all )
+                            {
+                                // changes the calendar's first-week-day to WKST part-rule
+                                setFirstWeekDay(oRR.wkst);
+
+                                // changes the calendar's first-visible date
+                                oRR.all.len() && setFirstVisibleDate(oRR.all.first());
+                            }
+                        })
+
+                        onActive();
+                    }
+
+                    /**
+                     * @description The onChangeExpr() method occurs once the user changes the recurrence-expression, so the fields should be updated accordingly
+                    */
+                    function onChangeExpr()
+                    {
+                        /**
+                         * @description The toProper() method returns from a character expression a string capitalized as appropriate for proper names
+                         * @param {string} value Specifies the value to convert
+                         * @returns {string} Returns from a character expression a string capitalized as appropriate for proper names, For instance, the "mihai".toProper() returns "Mihai"
+                        */
+                        function toProper(value)
+                        {
+                            return value.charAt(0).toLocaleUpperCase() + value.substr(1).toLocaleLowerCase()
+                        }
+
+                        /**
+                         * @description The toNumber() method converts the specified number to an input's value (type="number")
+                         * @param {number} value Specifies the value to convert
+                         * @returns {string} Returns the specified number to an input's value
+                        */
+                        function toNumber(value)
+                        {
+                            return !value || (value == 1) ?  "" : value;
+                        }
+
+                        /**
+                         * @description The toDate() method converts the specified date to an input's value (type="date")
+                         * @param {Date} value Specifies the value to convert
+                         * @returns {string} Returns the specified date to an input's value (type="date")
+                        */
+                        function toDate(value)
+                        {
+                            return !value || (pad(value.GetYear(),"0000") + "-" + pad(value.GetMonth()) + "-" + pad(value.GetDay()));
+                        }
+
+                        var oRecur = oCalendar.getRecurrences().oR,
+                            week = "SuMoTuWeThFrSa",
+                            aux;
+
+                        freq.value = toProper(oRecur && oRecur.get("FREQ") || "")
+                        interval.value = toNumber(oRecur && oRecur.get("INTERVAL") || "");
+                        count.value = toNumber(oRecur && oRecur.get("COUNT") || "");
+                        dtstart.value = toDate(oRecur && oRecur.get("DTSTART") || "");
+                        until.value = toDate(oRecur && oRecur.get("UNTIL") || "");
+                        bymonthday.value = (oRecur && oRecur.get("BYMONTHDAY") || [])[0] || "";
+                        byweekno.value = (oRecur && oRecur.get("BYWEEKNO") || [])[0] || "";
+                        byyearday.value = (oRecur && oRecur.get("BYYEARDAY") || [])[0] || "";
+                        bysetpos.value = (oRecur && oRecur.get("BYSETPOS") || [])[0] || "";
+
+                        aux = oRecur && oRecur.get("WKST");
+                        wkst.value = aux != null ? week.substr(2 * aux, 2) : "";
+
+                        aux = oRecur && oRecur.get("BYMONTH") || [];
+                        [jan,feb,mar,apr,may,jun,jul,aug,sep,oct,nov,dec].forEach(function(oInputMonth)
+                        {
+                            oInputMonth.checked = ~aux.indexOf(~~oInputMonth.value);
+                        })
+
+                        aux = oRecur && oRecur.get("BYDAY");
+                        [mon,tue,wed,thu,fri,sat,sun].forEach(function(oInputDay)
+                        {
+                            oInputDay.checked = aux && aux.get(week.indexOf(oInputDay.value)/2);
+                        })
+
+                        onActive();
+                    }
+
+                    /**
+                     * @description The onActive() method activates all not-empty inputs
+                    */
+                    function onActive()
+                    {
+                        /**
+                         * @description The activate() method adds or removes the "active" to input-elements
+                         * @param {HTMLElement} oElement Indicates the element whose className is changed
+                        */
+                        function activate(oElement)
+                        {
+                            oElement.classList.toggle("active", oElement.value);
+                        }
+
+                        activate(freq);
+                        activate(interval);
+                        activate(count);5
+                        activate(dtstart);
+                        activate(until);
+                        activate(bymonthday);
+                        activate(byweekno);
+                        activate(byyearday);
+                        activate(bysetpos);
+                        activate(wkst);
+
+                        onFrequencyRate();
+                    }
+
+                    /**
+                     * @description The onFrequencyRate() method updates the rate field based on the frequency/interval
+                    */
+                    function onFrequencyRate()
+                    {
+                        rate.innerText = freq.value.toLowerCase().replace("ly","(s)").replace("i(s)","y(s)").replace("(s)", !interval.value || interval.value == 1 ? "" : "s");
+                    }
+
+                    /**
+                     * @description The onError() method occurs once a parsing-error occurs
+                     * @param {string} error Indicates the error that just occured
+                    */
+                    function onError(description)
+                    {
+                        expression.className = "";
+                        error.innerText = "";
+                        if ( description ) 
+                        {
+                            console.log(description);
+                            expression.className = "error";
+                            error.innerText = description;
+                        }
+                    }
+
+                    /**
+                     * @description The getDateOnly() method gets the date part of the date-time (shortly excludes the time)
+                     * @param {number} datetime Indicates the date-time to remove time from
+                     * @returns {number} Returns the date by excluding its time, as a number
+                    */
+                    function getDateOnly(dateTime)
+                    {
+                        return dateTime - dateTime % exontrol.msday;  // excludes the time-portion from the dateTime value
+                    }
+
+                    /**
+                     * @description The replace() method replaces the sequence "name=...;" with "name=value;"
+                     * @param {string} expression Specifies the expression where replacement occurs
+                     * @param {string} name Specifies the name of field to replace
+                     * @param {string} value Specifies the value of field to replace or null/undefined to delete the field from the expression
+                     * @returns {string} Returns the newly expression
+                    */
+                    function replace(expression, name, value)
+                    {
+                        var SEMICOLON = ";",
+                            oRuleEx = new RegExp(name + "=[^;]*", "gi"),
+                            bReplace = exontrol.ToS(value).length,
+                            sReplacement = bReplace ? (name + "=" + value) : "";
+
+                        expression = expression.replace(oRuleEx, sReplacement);
+                        if ( bReplace )
+                            if ( !expression.match(oRuleEx) )
+                                expression += (expression.endsWith(SEMICOLON) ? "" : SEMICOLON) + sReplacement;
+                        expression = expression.replace(SEMICOLON+SEMICOLON, SEMICOLON);
+                        while (expression.startsWith(SEMICOLON))
+                            expression = expression.substr(1)
+
+                        return expression;
+                    }
+
+                    /**
+                     * @description The toggle() method add or remove the value within the "name=value,value,...;" sequence
+                     * @param {string} expression Specifies the expression where replacement occurs
+                     * @param {string} name Specifies the name of field to replace
+                     * @param {string} value Specifies the value of field to replace or null/undefined to delete the field from the expression
+                     * @returns {string} Returns the newly expression
+                    */
+                    function toggle(expression, name, value)
+                    {
+                        var SEMICOLON = ";",
+                            COMMA = ",",
+                            bReplace = exontrol.ToS(value).length,
+                            rgMatch,
+                            rgValues,
+                            nValue;
+
+                        if ( bReplace && (rgMatch = new RegExp(name + "=([^;]*)", "gi").exec(expression)) )
+                        {
+                            rgValues = rgMatch[1].split(COMMA);
+                            nValue = rgValues.indexOf(value);
+                            ~nValue ? rgValues.splice(nValue, 1) : rgValues.push(value);
+                            value = rgValues.join(COMMA);
+                        }
+
+                        return replace(expression, name, value);
+                    }
+
+                    /**
+                     * @description The appendOptions() method adds options to giving select element
+                     * @param {HTMLSelectElement} selectObj Specifies the select element
+                     * @param {number} name Indicates the number of options to add
+                    */
+                    function appendOptions(selectObj, count)
+                    {
+
+                        for ( var oElement, i = 1; i <= count; i++)
+                        {
+                            oElement = document.createElement("option")
+                            oElement.innerText = i;
+                            selectObj.appendChild(oElement);
+                        }
+
+                        for ( var oElement, i = count; i >= 1; i--)
+                        {
+                            oElement = document.createElement("option")
+                            oElement.innerText = -i;
+                            selectObj.appendChild(oElement);
+                        }
+                    }
+
+                    /**
+                     * @description The pad() method pads the expression with another string
+                     * @param {any} expression Indicates the expression to pad
+                     * @param {string} padString Specifies the string to pad the expression with
+                     * @returns {string} Returns the string expression
+                     * @private
+                    */
+                    function pad(expression, padString)
+                    {
+                        var sResult = exontrol.ToS(expression), // {string} indicates the expression to pad
+                            l;                                  // {number} specifies the number of padding-characters to add
+
+                        if ( padString = exontrol.ToS(padString, "00") )  // {string} indicates the padding expression
+                        {
+                        l = padString.length - sResult.length;
+                        if ( l > 0 )
+                            sResult = padString.substr(0, l) + sResult;
+                        }
+
+                        return sResult;
+                    }
+
+                    // updates the calendar at once
+                    oCalendar.Update(function()
+                    {
+                        /**
+                         * @description The getRecurrences() method gets the recurrences between first and last visible dates of the calendar, as an object of {start,wkst,all} type
+                         * @returns {object} Returns an empty object (invalid expression) or an object of {start,wkst,all} type
+                        */
+                        this.getRecurrences = function()
+                        {
+                            /**
+                             * @description The Calendar_buildRecurrences() method builds the recurrences between first and last visible dates of the calendar, as an object of {start,wkst,all} type
+                             * @returns {object} Returns an empty object (invalid expression) or an object of {start,wkst,all} type
+                            */
+                            function Calendar_buildRecurrences()
+                            {
+                                var oRecur = exontrol.ICalendar.IRecur.Parse(expression.value),
+                                    oVisibleRange = this.getVisibleRange(),
+                                    first = oVisibleRange.first,
+                                    last = oVisibleRange.last;
+
+                                onError();
+                                return oRecur.valid() && 
+                                {
+                                    oR: oRecur,
+                                    start: oRecur.r.dS,
+                                    wkst: oRecur.wkst(),
+                                    all: oRecur.all(
+                                    {
+                                        start: !oRecur.get("DTSTART") && (first.GetDay() - 1 ? first.copy().NextMonth().Reset(0x10) : first),
+                                        until: last.copy().NextDay(),
+                                        filter: getDateOnly
+                                    })
+                                } || onError(oRecur.error()) || {};
+                            }
+
+                            return this._rr || (this._rr = Calendar_buildRecurrences.call(this));
+                        }
+
+                        /**
+                         * @description The getVisibleRange() method returns an object of {first,last} type that defines the first and last visible dates within the calendar's day-view (new)
+                         * @returns {object} Returns an object of {first,last} type that defines the first and last visible dates within the calendar's day-view
+                        */
+                        this.getVisibleRange = function()
+                        {
+                            function Calendar_buildVisibleRange()
+                            {
+                                return {
+                                first: this.getVisibleParts().forEachU(function(rtObject, htObject)
+                                {
+                                    return exontrol.Calendar.getDay(htObject);
+                                }),
+                                last: this.getVisibleParts().rforEachU(function(rtObject, htObject)
+                                {
+                                    return exontrol.Calendar.getDay(htObject);
+                                })
+                                }
+                            }
+                            return this._vr || (this._vr = Calendar_buildVisibleRange.call(this));
+                        }
+
+                        /**
+                         * @description The onRL() method indicates that the control's layout requires to be recomputed (overridden)
+                        */
+                        this.onRL = (function(_super)
+                        {
+                            return function()
+                            {
+                                this._vr = null;  // resets the visible-range, once the control requests for a new layout
+                                this._rr = null;  // resets the current-recurrences, once the control requests for a new layout
+                                return _super.apply(this, arguments)
+                            }
+                        })(this.onRL)
+
+                        /**
+                         * @description The drawPart() method draws the giving part on specified rectangle (overridden)
+                         * @param {CanvasRenderingContext2D} ctx the canvas's context where drawing occurs.
+                         * @param {string} htObject A string value that's a result of a Layout.setObject call
+                         * @param {array} rtPart An array of [x,y,width,height] type that specifies the location on the context where the part is displayed.
+                         * @param {object} oAO Indicates the exontrol.AO that specifies the state of each part (hover, clicked and so on)
+                        */
+                        this.drawPart = (function(_super)
+                        {
+                            /**
+                             * @description The drawDay() method draws the date(day) at specified location
+                             * @param {CanvasRenderingContext2D} ctx Specifies the canvas's context where drawing occurs
+                             * @param {array} client Indicates an array of [x,y,width,height] type that specifies the location on the context where the part is displayed
+                             * @param {number} dateN Specifies the day to draw, as a number (result of getTime() method of Date object)
+                             * @returns {Date} Returns the date by excluding its time, as a number
+                            */
+                            function Calendar_drawDay(ctx, client, dateN)
+                            {
+                                var oRR = this.getRecurrences();
+                                oRR.all && oRR.all.has(dateN) && ctx.drawShape(client,  // shows the recurrences in solid-lime
+                                {
+                                    fillColor: "rgba(50,205,50, 0.5)",
+                                    primitive: "Round",
+                                    pad: 3
+                                })
+                                oRR.start && (getDateOnly(oRR.start) == dateN) && ctx.drawShape(client, // shows the first-date in framed-green
+                                {
+                                    frameColor: "green",
+                                    frameSize: 2,
+                                    primitive: "Round",
+                                    pad: 3
+                                })
+                            }
+
+                            return function(ctx, htObject, rtObject, oAO)
+                            {
+                                var day = exontrol.Calendar.getDay(htObject);
+                                day && Calendar_drawDay.call(this, ctx, rtObject, day.getTime());
+                                
+                                _super.apply(this, arguments);
+                            }
+                        })(this.drawPart);
+                    })
+
+                    appendOptions(bymonthday, 31);
+                    appendOptions(byweekno, 53);
+                    appendOptions(byyearday, 366)
+
+                    freq.oninput = function()
+                    {
+                        onExpr(expression.value = replace(expression.value, this.name, this.value));
+                        onFrequencyRate();
+                    }
+
+                    interval.oninput = function()
+                    {
+                        onExpr(expression.value = replace(expression.value, this.name, (this.value == "") || (~~this.value <= ~~this.min) ? null : this.value));
+                        onFrequencyRate();
+                    }
+
+                    jan.oninput = feb.oninput = mar.oninput = apr.oninput = may.oninput = jun.oninput = jul.oninput = aug.oninput = sep.oninput = oct.oninput = nov.oninput = dec.oninput = bymonthday.oninput = byweekno.oninput = byyearday.oninput = bysetpos.oninput = mon.oninput = tue.oninput = wed.oninput = thu.oninput = fri.oninput = sat.oninput = sun.oninput = function()
+                    {
+                        onExpr(expression.value = toggle(expression.value, this.name, this.value));
+                        if ( this.type.startsWith("select") && !oCalendar.getRecurrences().oR.has(this.name) )
+                        {
+                            this.value = "";
+                            onActive();
+                        }
+                    }
+
+                    wkst.oninput = function()
+                    {
+                        onExpr(expression.value = replace(expression.value, this.name, this.value));
+                    }
+
+                    count.oninput = function()
+                    {
+                        onExpr(expression.value = replace(expression.value, this.name, (this.value == "") || (~~this.value <= ~~this.min) ? null : this.value));
+                    }
+
+                    until.oninput = dtstart.oninput =function()
+                    {
+                        onExpr(expression.value = replace(expression.value, this.name, this.value.replace(/-/g,"") || null));
+                    }
+
+                    setFirstWeekDay(1); // sets Mo(nday) as the first day of the week 
+                    setFirstVisibleDate(Date.Today());  // changes the calendar's first visible date
+                    onChangeExpr(); // updates the fields based on the current recurrence-expression
+                </script>
+                <blockquote class="quote b">
+                    Change the rule-fields or RRULE filed to show new recurrences.
+                </blockquote>                
+            </div>
+            <div class="sample" id="all">
+<pre class="code">
+<span class="operator">var</span> oRecur = exontrol.ICalendar.IRecur.Parse(<span class="string">"<span id="rrule" contenteditable="true" oninput="onrrule(this.innerText)">FREQ=MONTHLY;BYMONTHDAY=28,29,30,31;BYSETPOS=-1;COUNT=12</span>"</span>);
+console.log(oRecur.error() || oRecur.all().reduce(<span class="operator">function</span>(prev, dateTimeN)
+{
+    <span class="operator">return</span> prev + <span class="operator">new</span> Date(dateTimeN).toUTCString() + "\n";
+}, <span class="string">""</span>));
+</pre>
+<textarea id="result" readonly spellcheck="false"></textarea>
+<script>
+    function onrrule(expression)
+    {
+        var oRecur = exontrol.ICalendar.IRecur.Parse(expression, {ignoreUnknownRule: false}); // {exontrol.ICalendar.IRecur} parses the expression to an IRecur object
+        result.value = oRecur.error() || oRecur.all().reduce(function(prev, dateTimeN)
+        {
+            return prev + new Date(dateTimeN).toUTCString() + "\n";
+        }, "");
+        result.className = oRecur.valid() ? "" : "error";
+    }
+   
+    onrrule(rrule.innerText);
+</script>
+<blockquote class="quote b">
+    Click the "FREQ=MONTHLY;&#8230;" to change the recurrence-expression.
+    The supported rules are: DTSTART, FREQ, UNTIL, COUNT, INTERVAL, BYSECOND, BYMINUTE, BYHOUR, BYDAY, BYMONTHDAY, BYYEARDAY, BYWEEKNO, BYMONTH, BYSETPOS, WKST.
+</blockquote>                
+            </div>
+        </div>
+        <div class="code">
+            <pre class="source">
+            </pre>
+        </div>
+    </div>
+    <div class="jssamples doc">
+        <div class="code">
+            <pre class="source">
+            </pre>
+        </div>
+    </div>
+</body>
+</html>
